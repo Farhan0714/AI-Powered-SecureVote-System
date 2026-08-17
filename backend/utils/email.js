@@ -3,11 +3,14 @@ const qrcode = require('qrcode');
 
 const transporter = nodemailer.createTransport({
   host: 'smtp.gmail.com',
-  port: 465,
-  secure: true,
+  port: 587,
+  secure: false, // Port 587 with STARTTLS is highly compatible with Render/Cloud firewall restrictions
   auth: {
-    user: process.env.SMTP_EMAIL,
-    pass: process.env.SMTP_PASSWORD
+    user: process.env.SMTP_EMAIL || 'securevote363@gmail.com',
+    pass: process.env.SMTP_PASSWORD || 'syxutrswhkxgmhlh'
+  },
+  tls: {
+    rejectUnauthorized: false
   }
 });
 
