@@ -1,0 +1,49 @@
+services:
+  # Backend Web Service
+  - type: web
+    name: secure-vote-backend
+    env: node
+    plan: free
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: PORT
+        value: 4050
+      - key: MONGO_URI
+        sync: false
+        placeholder: "Your MongoDB Atlas connection string"
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      - key: SMTP_EMAIL
+        sync: false
+        placeholder: "Gmail address for notifications"
+      - key: SMTP_PASSWORD
+        sync: false
+        placeholder: "Gmail SMTP App Password"
+      - key: GEMINI_API_KEY
+        sync: false
+        placeholder: "Gemini API Key"
+      - key: NODE_ENV
+        value: production
+
+  # Frontend Static Site
+  - type: web
+    name: secure-vote-frontend
+    env: static
+    plan: free
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    publishDir: dist
+    routes:
+      - type: rewrite
+        src: /*
+        dest: /index.html
+    envVars:
+      - key: VITE_API_URL
+        fromService:
+          name: secure-vote-backend
+          type: web
+          property: host
