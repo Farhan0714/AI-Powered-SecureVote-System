@@ -21,8 +21,12 @@ export default function Signup() {
     if (form.password !== form.confirmPassword) return setError('Passwords do not match.');
     setLoading(true);
     try {
-      await api.post('/auth/signup/request-otp', form);
-      setInfo('OTP sent to your email. Check your inbox.');
+      const { data } = await api.post('/auth/signup/request-otp', form);
+      if (data.devBypassOtp) {
+        setInfo(`OTP sent to email. [Dev Mode Bypass]: Use OTP code: ${data.devBypassOtp}`);
+      } else {
+        setInfo('OTP sent to your email. Check your inbox.');
+      }
       setStep('otp');
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to send OTP.');

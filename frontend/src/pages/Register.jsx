@@ -32,9 +32,13 @@ export default function Register() {
   const requestOtp = async () => {
     setError(''); setLoading(true);
     try {
-      await api.post('/registration/request-otp', { email: form.regEmail });
+      const { data } = await api.post('/registration/request-otp', { email: form.regEmail });
       setOtpSent(true);
-      setInfo('OTP sent to your email.');
+      if (data.devBypassOtp) {
+        setInfo(`OTP sent. [Dev Mode Bypass]: Use OTP code: ${data.devBypassOtp}`);
+      } else {
+        setInfo('OTP sent to your email.');
+      }
     } catch (err) { setError(err.response?.data?.message || 'Failed to send OTP.'); }
     finally { setLoading(false); }
   };

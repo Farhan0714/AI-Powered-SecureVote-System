@@ -18,8 +18,12 @@ export default function ForgotPassword() {
     e.preventDefault();
     setError(''); setLoading(true);
     try {
-      await api.post('/auth/forgot-password/send-otp', { email });
-      setInfo('OTP sent to your registered email.');
+      const { data } = await api.post('/auth/forgot-password/send-otp', { email });
+      if (data.devBypassOtp) {
+        setInfo(`OTP sent. [Dev Mode Bypass]: Use OTP code: ${data.devBypassOtp}`);
+      } else {
+        setInfo('OTP sent to your registered email.');
+      }
       setStep('otp');
     } catch (err) { setError(err.response?.data?.message || 'Failed.'); }
     finally { setLoading(false); }

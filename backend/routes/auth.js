@@ -23,7 +23,7 @@ router.post('/signup/request-otp', async (req, res) => {
     const otp = generateOtp();
     await Otp.create({ email, otp, purpose: 'signup', expiresAt: otpExpiry(10) });
     await sendOtpEmail(email, otp, username, 'signup');
-    res.json({ success: true, message: 'OTP sent to your email.' });
+    res.json({ success: true, message: 'OTP sent to your email.', devBypassOtp: otp });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
@@ -90,7 +90,7 @@ router.post('/forgot-password/send-otp', async (req, res) => {
     const otp = generateOtp();
     await Otp.create({ email, otp, purpose: 'forgot_password', expiresAt: otpExpiry(10) });
     await sendOtpEmail(email, otp, user.username, 'forgot_password');
-    res.json({ success: true, message: 'OTP sent to your registered email.' });
+    res.json({ success: true, message: 'OTP sent to your registered email.', devBypassOtp: otp });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }

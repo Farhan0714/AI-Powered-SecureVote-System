@@ -17,7 +17,7 @@ router.post('/request-otp', protect, async (req, res) => {
     const otp = generateOtp();
     await Otp.create({ email, otp, purpose: 'registration', expiresAt: otpExpiry(10) });
     await sendOtpEmail(email, otp, req.user.username, 'registration');
-    res.json({ success: true, message: 'OTP sent to your email.' });
+    res.json({ success: true, message: 'OTP sent to your email.', devBypassOtp: otp });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
