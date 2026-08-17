@@ -30,15 +30,16 @@ services:
         value: production
 
   # Frontend Static Site
-  - type: static
+  - type: web
     name: secure-vote-frontend
+    env: static
     rootDir: frontend
     buildCommand: npm install && npm run build
-    publishDir: dist
+    publishPath: dist
     routes:
       - type: rewrite
-        src: /*
-        dest: /index.html
+        source: /*
+        destination: /index.html
     envVars:
       - key: VITE_API_URL
         fromService:
