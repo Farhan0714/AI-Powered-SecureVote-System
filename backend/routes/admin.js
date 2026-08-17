@@ -31,16 +31,32 @@ async function generateUnusedCode() {
   return code;
 }
 
-// List all registrations (optionally filter by status)
+// List all registrations (optionally filter by status and type)
 router.get('/registrations', async (req, res) => {
   try {
-    const { status } = req.query;
-    const filter = status ? { status } : {};
+    const { status, type } = req.query;
+    const filter = {};
+    if (status) filter.status = status;
+    if (type) filter.type = type;
     const registrations = await Registration.find(filter)
       .select('-livePhoto -identityProof -faceDescriptor')
       .populate('account', 'username email')
       .sort({ createdAt: -1 });
-    res.json({ success: true, registrations });
+
+    // Calculate pending counts for all types
+    const pendingNew = await Registration.countDocuments({ status: 'pending', type: 'new' });
+    const pendingCorrection = await Registration.countDocuments({ status: 'pending', type: 'correction' });
+    const pendingDeletion = await Registration.countDocuments({ status: 'pending', type: 'deletion' });
+
+    res.json({
+      success: true,
+      registrations,
+      pendingCounts: {
+        new: pendingNew,
+        correction: pendingCorrection,
+        deletion: pendingDeletion
+      }
+    });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
@@ -82,31 +98,64 @@ router.post('/registrations/:id/decision', async (req, res) => {
     registration.adminComment = comment || '';
     await registration.save();
 
-    if (decision === 'approved') {
-      const uniqueCode = await generateUnusedCode();
-      await ApprovedUser.create({
-        account: registration.account._id,
-        name: registration.name,
-        fatherName: registration.fatherName,
-        motherName: registration.motherName,
-        address: registration.address,
-        phone: registration.phone,
-        age: registration.age,
-        voterId: registration.voterId,
-        uniqueCode,
-        faceDescriptor: registration.faceDescriptor,
-        livePhoto: registration.livePhoto
-      });
+    const { 
+      sendApprovalEmail, 
+      sendCorrectionApprovalEmail, 
+      sendDeletionApprovalEmail, 
+      sendRejectionEmail 
+    } = require('../utils/email');
 
-      // Anonymized event only - no personal identifiers written to the chain. It's queued;
-      // it only becomes part of the trusted chain once a quorum of verifiers sign it
-      // (see routes/verifiers.js) - nothing is auto-finalized here.
-      blockchain.addPendingVote({ event: 'voter_approved' });
-      await sendApprovalEmail(registration.account.email, registration.account.username, uniqueCode);
+    if (decision === 'approved') {
+      if (registration.type === 'new') {
+        const uniqueCode = await generateUnusedCode();
+        const approvedUser = await ApprovedUser.create({
+          account: registration.account._id,
+          name: registration.name,
+          fatherName: registration.fatherName,
+          motherName: registration.motherName,
+          address: registration.address,
+          phone: registration.phone,
+          age: registration.age,
+          voterId: registration.voterId,
+          uniqueCode,
+          faceDescriptor: registration.faceDescriptor,
+          livePhoto: registration.livePhoto
+        });
+
+        blockchain.addPendingVote({ event: 'voter_approved' });
+        await sendApprovalEmail(registration.account.email, registration.account.username, uniqueCode, approvedUser._id, registration.voterId);
+      } else if (registration.type === 'correction') {
+        const approvedUser = await ApprovedUser.findOneAndUpdate(
+          { account: registration.account._id },
+          {
+            name: registration.name,
+            fatherName: registration.fatherName,
+            motherName: registration.motherName,
+            address: registration.address,
+            phone: registration.phone,
+            age: registration.age,
+            voterId: registration.voterId,
+            faceDescriptor: registration.faceDescriptor,
+            livePhoto: registration.livePhoto
+          },
+          { new: true, upsert: true }
+        );
+
+        blockchain.addPendingVote({ event: 'voter_updated' });
+        await sendCorrectionApprovalEmail(registration.account.email, registration.account.username);
+      } else if (registration.type === 'deletion') {
+        await ApprovedUser.deleteOne({ account: registration.account._id });
+
+        blockchain.addPendingVote({ event: 'voter_deleted' });
+        await sendDeletionApprovalEmail(registration.account.email, registration.account.username);
+      }
+    } else {
+      // Rejection
+      await sendRejectionEmail(registration.account.email, registration.account.username, comment, registration.type);
     }
 
     await logAction(req.user, decision === 'approved' ? 'registration_approved' : 'registration_rejected', {
-      targetType: 'Registration', targetId: registration._id, metadata: { voterId: registration.voterId }
+      targetType: 'Registration', targetId: registration._id, metadata: { voterId: registration.voterId, type: registration.type }
     });
 
     res.json({ success: true, message: `Registration ${decision}.` });
@@ -215,6 +264,105 @@ router.delete('/candidates/:id', async (req, res) => {
   await Candidate.findByIdAndDelete(req.params.id);
   await logAction(req.user, 'candidate_removed', { targetType: 'Candidate', targetId: req.params.id });
   res.json({ success: true, message: 'Candidate removed.' });
+});
+
+// Retrieve approved voter details for booth scanning
+router.get('/approved-voters/:id', async (req, res) => {
+  try {
+    const voter = await ApprovedUser.findById(req.params.id);
+    if (!voter) return res.status(404).json({ success: false, message: 'Approved voter not found.' });
+
+    const photoBase64 = voter.livePhoto?.data ? `data:${voter.livePhoto.contentType};base64,${voter.livePhoto.data.toString('base64')}` : null;
+    res.json({
+      success: true,
+      voter: {
+        _id: voter._id,
+        name: voter.name,
+        voterId: voter.voterId,
+        age: voter.age,
+        address: voter.address,
+        phone: voter.phone,
+        uniqueCode: voter.uniqueCode,
+        livePhoto: photoBase64,
+        hasVoted: voter.hasVoted,
+        faceDescriptor: voter.faceDescriptor
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// Cast vote via admin scanning booth
+const { isFaceMatch } = require('../utils/faceMatch');
+const crypto = require('crypto');
+
+router.post('/cast-vote-for-voter', async (req, res) => {
+  try {
+    const { voterId, candidateId, uniqueCode, faceDescriptor, faceImage, livenessVerified } = req.body;
+    if (!voterId || !candidateId || !uniqueCode || !faceDescriptor) {
+      return res.status(400).json({ success: false, message: 'Missing required parameters.' });
+    }
+    if (livenessVerified !== true) {
+      return res.status(400).json({ success: false, message: 'Liveness check (blinking) was not confirmed.' });
+    }
+
+    const voter = await ApprovedUser.findById(voterId);
+    if (!voter) return res.status(404).json({ success: false, message: 'Voter not found.' });
+    if (voter.hasVoted) return res.status(400).json({ success: false, message: 'This voter has already voted.' });
+
+    if (uniqueCode.trim().toUpperCase() !== voter.uniqueCode) {
+      return res.status(400).json({ success: false, message: 'Incorrect unique code.' });
+    }
+
+    let liveDescriptor;
+    try {
+      liveDescriptor = Array.isArray(faceDescriptor) ? faceDescriptor : JSON.parse(faceDescriptor);
+      if (!Array.isArray(liveDescriptor) || liveDescriptor.length !== 128) throw new Error('bad shape');
+    } catch {
+      return res.status(400).json({ success: false, message: 'Face capture failed. Please retake face scan.' });
+    }
+
+    const { isMatch, distance } = isFaceMatch(voter.faceDescriptor, liveDescriptor);
+    if (!isMatch) {
+      return res.status(401).json({ success: false, message: 'Face verification failed. This does not match the registered face.' });
+    }
+
+    const candidate = await Candidate.findById(candidateId);
+    if (!candidate) return res.status(404).json({ success: false, message: 'Candidate not found.' });
+
+    const voteHash = crypto.createHash('sha256')
+      .update(`${voter._id}${candidate._id}${Date.now()}${Math.random()}`)
+      .digest('hex');
+
+    let faceCaptureAtVote;
+    if (faceImage && faceImage.startsWith('data:')) {
+      const [meta, base64Data] = faceImage.split(',');
+      const contentType = meta.match(/data:(.*);base64/)?.[1] || 'image/jpeg';
+      faceCaptureAtVote = { data: Buffer.from(base64Data, 'base64'), contentType };
+    }
+
+    await Vote.create({
+      user: voter._id,
+      candidate: candidate._id,
+      faceCaptureAtVote,
+      faceMatchDistance: distance,
+      livenessVerified: true,
+      voteHash
+    });
+
+    voter.hasVoted = true;
+    await voter.save();
+
+    blockchain.addPendingVote({ voteHash });
+    await blockchain.autoProposeAndAdminSign();
+
+    await logAction(req.user, 'admin_voted_for_user', { targetType: 'ApprovedUser', targetId: voter._id, metadata: { voterId: voter.voterId } });
+
+    res.json({ success: true, message: 'Vote cast successfully via QR scanner!' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
 });
 
 module.exports = router;

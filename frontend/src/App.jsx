@@ -11,6 +11,8 @@ import Signup from './pages/Signup.jsx';
 import ForgotPassword from './pages/ForgotPassword.jsx';
 import Dashboard from './pages/Dashboard.jsx';
 import Register from './pages/Register.jsx';
+import Correction from './pages/Correction.jsx';
+import Deletion from './pages/Deletion.jsx';
 import Submitted from './pages/Submitted.jsx';
 import Vote from './pages/Vote.jsx';
 import ElectionData from './pages/ElectionData.jsx';
@@ -25,6 +27,7 @@ import AdminView from './pages/admin/AdminView.jsx';
 import AdminPublishResults from './pages/admin/AdminPublishResults.jsx';
 import AdminVotingPhase from './pages/admin/AdminVotingPhase.jsx';
 import AdminVerifyBlockchain from './pages/admin/AdminVerifyBlockchain.jsx';
+import AdminVerifyVoter from './pages/admin/AdminVerifyVoter.jsx';
 
 export default function App() {
   return (
@@ -41,6 +44,8 @@ export default function App() {
             {/* ---- User side ---- */}
             <Route path="/dashboard" element={<ProtectedRoute roles={['user']}><Dashboard /></ProtectedRoute>} />
             <Route path="/register" element={<ProtectedRoute roles={['user']}><Register /></ProtectedRoute>} />
+            <Route path="/correct" element={<ProtectedRoute roles={['user']}><Correction /></ProtectedRoute>} />
+            <Route path="/delete" element={<ProtectedRoute roles={['user']}><Deletion /></ProtectedRoute>} />
             <Route path="/submitted" element={<ProtectedRoute roles={['user']}><Submitted /></ProtectedRoute>} />
             <Route path="/vote" element={<ProtectedRoute roles={['user']}><Vote /></ProtectedRoute>} />
             <Route path="/election-data" element={<ProtectedRoute roles={['user']}><ElectionData /></ProtectedRoute>} />
@@ -50,6 +55,7 @@ export default function App() {
             {/* ---- Admin side ---- */}
             <Route path="/admin" element={<ProtectedRoute roles={['admin']}><AdminDashboard /></ProtectedRoute>} />
             <Route path="/admin/registrations/:id" element={<ProtectedRoute roles={['admin']}><AdminView /></ProtectedRoute>} />
+            <Route path="/admin/verify-voter/:id" element={<ProtectedRoute roles={['admin']}><AdminVerifyVoter /></ProtectedRoute>} />
             <Route path="/admin/publish-results" element={<ProtectedRoute roles={['admin']}><AdminPublishResults /></ProtectedRoute>} />
             <Route path="/admin/voting-phase" element={<ProtectedRoute roles={['admin']}><AdminVotingPhase /></ProtectedRoute>} />
             <Route path="/admin/blockchain" element={<ProtectedRoute roles={['admin']}><AdminVerifyBlockchain /></ProtectedRoute>} />

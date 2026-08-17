@@ -2,6 +2,7 @@
 require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') });
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 
 const connectDB = require('../config/db');
 const User = require('../models/User');
@@ -17,10 +18,30 @@ async function seed() {
 
   // --- Admin account ---
   const adminExists = await User.findOne({ username: 'admin' });
-  if (!adminExists) {
+  const { publicKey, privateKey } = crypto.generateKeyPairSync('rsa', {
+    modulusLength: 2048,
+    publicKeyEncoding: { type: 'spki', format: 'pem' },
+    privateKeyEncoding: { type: 'pkcs8', format: 'pem' }
+  });
+
+  if (adminExists) {
+    if (!adminExists.publicKeyPem || !adminExists.privateKeyPem) {
+      adminExists.publicKeyPem = publicKey;
+      adminExists.privateKeyPem = privateKey;
+      await adminExists.save();
+      console.log('👤 Admin updated with automatic signing keys');
+    }
+  } else {
     const passwordHash = await bcrypt.hash('Admin@123', 10);
-    await User.create({ username: 'admin', email: 'admin@securevote.local', passwordHash, role: 'admin' });
-    console.log('👤 Admin created -> username: admin | password: Admin@123');
+    await User.create({
+      username: 'admin',
+      email: 'admin@securevote.local',
+      passwordHash,
+      role: 'admin',
+      publicKeyPem: publicKey,
+      privateKeyPem: privateKey
+    });
+    console.log('👤 Admin created -> username: admin | password: Admin@123 | automatic keys generated');
   }
 
   // --- Verifier accounts (multi-signature block finalization: 2-of-3 quorum with admin) ---

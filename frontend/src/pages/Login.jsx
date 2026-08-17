@@ -31,31 +31,33 @@ export default function Login() {
         <div className="auth-header">
           <div className="auth-icon">🔐</div>
           <h2 className="auth-title">Welcome Back</h2>
-          <p className="auth-subtitle">Sign in to access your secure voting dashboard</p>
+          <p className="auth-subtitle">Sign in to access your voting dashboard</p>
         </div>
         <Alert type="error">{error}</Alert>
-        <form className="auth-form" onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit}>
           <div className="form-group">
             <label className="form-label">Username</label>
             <input className="form-input" required value={form.username}
-              onChange={e => setForm({ ...form, username: e.target.value })} placeholder="Enter your username" />
+              onChange={e => setForm({ ...form, username: e.target.value })}
+              placeholder="Enter your username" autoFocus />
           </div>
           <div className="form-group">
             <label className="form-label">Password</label>
             <input type="password" className="form-input" required value={form.password}
-              onChange={e => setForm({ ...form, password: e.target.value })} placeholder="Enter your password" />
+              onChange={e => setForm({ ...form, password: e.target.value })}
+              placeholder="Enter your password" />
           </div>
           <div className="form-options">
-            <Link to="/forgot-password" className="forgot-link">Forgot Password?</Link>
+            <Link to="/forgot-password" className="forgot-link">Forgot password?</Link>
           </div>
           <button type="submit" className="btn btn-primary btn-lg" disabled={loading}>
-            {loading ? '⏳ Signing in...' : 'Sign In'}
+            {loading ? 'Signing in...' : 'Sign In'}
           </button>
-          <div className="auth-alternative">
-            <p>Don't have an account?</p>
-            <Link to="/signup" className="btn btn-secondary btn-lg">✨ Create Account</Link>
-          </div>
         </form>
+        <div className="auth-alternative">
+          <p>Don't have an account?</p>
+          <Link to="/signup" className="btn btn-secondary btn-lg">Create Account</Link>
+        </div>
       </div>
     </div>
   );

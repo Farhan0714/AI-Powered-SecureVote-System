@@ -9,8 +9,8 @@ function getClient() {
   return genAI;
 }
 
-// Free-tier friendly, fast model. Change to 'gemini-1.5-pro' if you have access.
-const MODEL_NAME = 'gemini-1.5-flash';
+// Free-tier friendly, fast model. Change to 'gemini-3.5-pro' if you have access.
+const MODEL_NAME = 'gemini-3.5-flash';
 
 async function askGemini(systemInstruction, userPrompt) {
   const client = getClient();

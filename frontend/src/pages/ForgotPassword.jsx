@@ -5,7 +5,7 @@ import Alert from '../components/Alert.jsx';
 
 export default function ForgotPassword() {
   const navigate = useNavigate();
-  const [step, setStep] = useState('email'); // email -> otp -> reset
+  const [step, setStep] = useState('email');
   const [email, setEmail] = useState('');
   const [otp, setOtp] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -60,39 +60,39 @@ export default function ForgotPassword() {
         {step === 'email' && (
           <form onSubmit={sendOtp}>
             <div className="form-group">
-              <label className="form-label">Registered Email Address *</label>
+              <label className="form-label">Registered Email Address</label>
               <input type="email" className="form-input" required value={email}
-                onChange={e => setEmail(e.target.value)} placeholder="Enter your email address" />
+                onChange={e => setEmail(e.target.value)} placeholder="Enter your email" />
             </div>
-            <button className="btn btn-primary btn-lg" disabled={loading}>📱 Send OTP</button>
+            <button className="btn btn-primary btn-lg" disabled={loading}>Send OTP</button>
           </form>
         )}
         {step === 'otp' && (
           <form onSubmit={verifyOtp}>
             <div className="form-group">
-              <label className="form-label">Enter OTP *</label>
+              <label className="form-label">Enter OTP</label>
               <input className="form-input otp-input" required maxLength={6} value={otp}
-                onChange={e => setOtp(e.target.value.replace(/\D/g, ''))} />
+                onChange={e => setOtp(e.target.value.replace(/\D/g, ''))} placeholder="000000" />
             </div>
-            <button className="btn btn-primary btn-lg" disabled={loading}>✅ Verify OTP</button>
+            <button className="btn btn-primary btn-lg" disabled={loading}>Verify OTP</button>
           </form>
         )}
         {step === 'reset' && (
           <form onSubmit={resetPassword}>
             <div className="form-group">
-              <label className="form-label">New Password *</label>
+              <label className="form-label">New Password</label>
               <input type="password" className="form-input" required value={newPassword}
                 onChange={e => setNewPassword(e.target.value)} placeholder="At least 6 characters" />
             </div>
             <div className="form-group">
-              <label className="form-label">Confirm Password *</label>
+              <label className="form-label">Confirm Password</label>
               <input type="password" className="form-input" required value={confirmPassword}
                 onChange={e => setConfirmPassword(e.target.value)} placeholder="Re-enter password" />
             </div>
-            <button className="btn btn-primary btn-lg" disabled={loading}>🔄 Reset Password</button>
+            <button className="btn btn-primary btn-lg" disabled={loading}>Reset Password</button>
           </form>
         )}
-        <p className="login-link text-center"><Link to="/login">← Back to Login</Link></p>
+        <p className="login-link"><Link to="/login">← Back to Login</Link></p>
       </div>
     </div>
   );

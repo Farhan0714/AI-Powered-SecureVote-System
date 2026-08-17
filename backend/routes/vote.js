@@ -30,12 +30,15 @@ router.get('/candidates', protect, async (req, res) => {
 router.get('/status', protect, async (req, res) => {
   const approvedUser = await ApprovedUser.findOne({ account: req.user._id });
   const votingActive = await isVotingActive();
+  const photoBase64 = approvedUser?.livePhoto?.data ? `data:${approvedUser.livePhoto.contentType};base64,${approvedUser.livePhoto.data.toString('base64')}` : null;
   res.json({
     success: true,
     votingActive,
     isApprovedVoter: !!approvedUser,
     hasVoted: approvedUser?.hasVoted || false,
-    uniqueCode: approvedUser ? approvedUser.uniqueCode : null
+    uniqueCode: approvedUser ? approvedUser.uniqueCode : null,
+    faceDescriptor: approvedUser ? approvedUser.faceDescriptor : null,
+    livePhoto: photoBase64
   });
 });
 
@@ -104,6 +107,7 @@ router.post('/cast', protect, async (req, res) => {
     // Anonymized transaction only - no candidate name/identity so the running tally can't be
     // inferred from the chain by anyone, including the admin.
     blockchain.addPendingVote({ voteHash });
+    await blockchain.autoProposeAndAdminSign();
 
     res.json({ success: true, message: 'Vote cast successfully! Thank you for participating.' });
   } catch (err) {

@@ -17,6 +17,8 @@ const registrationSchema = new mongoose.Schema({
   faceDescriptor: { type: [Number], default: undefined },
   livenessVerified: { type: Boolean, default: false },
   status: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' },
+  type: { type: String, enum: ['new', 'correction', 'deletion'], default: 'new' },
+  reasonForDeletion: { type: String, default: '' },
   adminComment: { type: String, default: '' }
 }, { timestamps: true });
 

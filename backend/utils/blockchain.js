@@ -125,8 +125,20 @@ function isChainValid() {
 }
 
 function getStats() {
+  let totalVotes = 0;
+  for (const block of chain) {
+    if (block.txType === 'vote_batch' && block.txData && Array.isArray(block.txData.votes)) {
+      for (const tx of block.txData.votes) {
+        if (tx.voteHash) {
+          totalVotes++;
+        }
+      }
+    }
+  }
+
   return {
     totalBlocks: chain.length,
+    totalVotes,
     pendingVotes: pendingVotes.length,
     isValid: isChainValid(),
     lastBlockHash: chain[chain.length - 1]?.hash || null
@@ -146,7 +158,31 @@ async function resetBlockchain() {
   await createGenesisBlock();
 }
 
+async function autoProposeAndAdminSign() {
+  const pendingBlock = await proposeBlock(2);
+  if (!pendingBlock) return null;
+
+  const User = require('../models/User');
+  const adminUser = await User.findOne({ role: 'admin' });
+  if (!adminUser || !adminUser.privateKeyPem) {
+    console.warn('⚠️ Auto-signing warning: Admin user or private key not found.');
+    return pendingBlock;
+  }
+
+  try {
+    const sign = crypto.createSign('RSA-SHA256');
+    sign.update(pendingBlock.hash);
+    const signatureBase64 = sign.sign(adminUser.privateKeyPem, 'base64');
+
+    await addSignature(pendingBlock._id, adminUser, signatureBase64);
+    console.log(`✅ Block #${pendingBlock.index} proposed and auto-signed by admin.`);
+  } catch (err) {
+    console.error('❌ Failed to auto-sign block:', err.message);
+  }
+  return pendingBlock;
+}
+
 module.exports = {
   initBlockchain, addPendingVote, proposeBlock, getPendingBlocks, addSignature,
-  isChainValid, getStats, getPublicChainMeta, resetBlockchain
+  isChainValid, getStats, getPublicChainMeta, resetBlockchain, autoProposeAndAdminSign
 };

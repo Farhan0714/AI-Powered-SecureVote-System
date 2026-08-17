@@ -9,15 +9,16 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@vladmandic/face-api": "^1.7.15",
     "axios": "^1.7.2",
-    "face-api.js": "^0.20.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.30.4",
     "recharts": "^2.12.7"
   },
   "devDependencies": {
-  "@vitejs/plugin-react": "4.3.1",
-  "vite": "5.4.21"
+    "@vitejs/plugin-basic-ssl": "^1.1.0",
+    "@vitejs/plugin-react": "4.3.1",
+    "vite": "5.4.21"
   }
 }

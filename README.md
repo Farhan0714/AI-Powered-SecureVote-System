@@ -219,6 +219,51 @@ Browsers only allow webcam access (`getUserMedia`, used for face capture) on **H
 - Gemini free tier has per-minute/per-day rate limits — fine for a college demo; if you exceed them, the chatbot/growth-analysis routes will return an error message the UI already handles gracefully.
 - Gmail SMTP may require "Less secure app" workaround disabled — always use an **App Password**, never your real password, and be aware Gmail free sending has daily limits (~500/day), which is more than enough for a project demo.
 
+### 7.7 GCP Cloud Run (single service — frontend + backend)
+This repo ships a ready-made multi-stage `Dockerfile` that builds the React frontend **and** serves it from the same Express process that hosts the API. That means one Cloud Run service, one public URL, same-origin cookies/CORS — no Vercel/Render split needed.
+
+1. **Prerequisite:** Cloud Run requires **billing to be enabled** on the GCP project (even to use the free tier — a payment method must be on file; you are never charged until you exceed free limits). Enable it at
+   `https://console.developers.google.com/billing/enable?project=<PROJECT_ID>`.
+2. Authenticate and set your project:
+   ```bash
+   gcloud auth login
+   gcloud config set project <PROJECT_ID>
+   ```
+3. Create an env-vars file from your `backend/.env` (secrets stay out of the repo thanks to `.gcloudignore`):
+   ```bash
+   python3 - <<'EOF'
+   env = {}
+   for line in open('backend/.env'):
+       line = line.strip()
+       if not line or line.startswith('#') or '=' not in line: continue
+       k, v = line.split('=', 1)
+       env[k.strip()] = v.strip().strip('"').strip("'")
+   env['PORT'] = '8080'
+   env['NODE_ENV'] = 'production'
+   with open('/tmp/envs.yaml', 'w') as f:
+       for k, v in env.items():
+           if v: f.write(f"{k}: '{v}'\n")
+   EOF
+   ```
+4. Deploy (Cloud Build compiles the image; free tier = 120 build-min/day):
+   ```bash
+   gcloud run deploy securevote --source . --region us-central1 \
+     --allow-unauthenticated --memory 512Mi --cpu 1 \
+     --project <PROJECT_ID> --env-vars-file /tmp/envs.yaml --quiet
+   ```
+5. Point `CLIENT_URL` at the generated `*.run.app` URL and redeploy once so CORS allows cross-origin dev usage:
+   ```bash
+   gcloud run services update securevote --region us-central1 \
+     --update-env-vars CLIENT_URL=$(gcloud run services describe securevote --region us-central1 --format='value(status.url)')
+   ```
+6. Seed the database once (`npm run seed` locally against the same `MONGO_URI`), then verify:
+   ```bash
+   curl https://<your-service>.run.app/api/health   # { status: 'ok' }
+   open https://<your-service>.run.app/             # the redesigned SPA
+   ```
+
+**Costs:** Cloud Run's free tier covers 2M requests/month; Cloud Build 120 build-min/day; the image lives in Artifact Registry (~a few cents/GB-month). A student demo stays comfortably inside free limits.
+
 ---
 
 ## 8. Environment Variables Reference

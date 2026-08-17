@@ -28,10 +28,8 @@ export default function Chatbot() {
 
     try {
       const endpoint = user ? '/chatbot/ask' : '/chatbot/ask-public';
-      const payload = user
-        ? { message: text, history: newMessages.slice(-6).map(m => ({ role: m.role, text: m.text })) }
-        : { message: text };
-      const { data } = await api.post(endpoint, payload);
+      const history = newMessages.slice(-6).map(m => ({ role: m.role, text: m.text }));
+      const { data } = await api.post(endpoint, { message: text, history });
       setMessages(prev => [...prev, { role: 'bot', text: data.reply }]);
     } catch (err) {
       setMessages(prev => [...prev, { role: 'bot', text: '⚠️ Sorry, I could not process that right now. Please try again.' }]);

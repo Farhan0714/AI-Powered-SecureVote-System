@@ -1,0 +1,12 @@
+# Keep Cloud Build source uploads lean and secret-free
+.git
+.gitignore
+.gcloudignore
+.freebuff
+.idea
+**/node_modules
+**/dist
+backend/.env
+frontend/.env
+*.log
+.DS_Store
