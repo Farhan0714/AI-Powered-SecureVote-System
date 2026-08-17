@@ -12,7 +12,7 @@ const Manifesto = require('../models/Manifesto');
 const SectorData = require('../models/SectorData');
 const VotingPhase = require('../models/VotingPhase');
 
-async function seed() {
+async function seed(keepConnectionOpen = false) {
   await connectDB();
   console.log('🌱 Seeding SecureVote database...');
 
@@ -150,11 +150,17 @@ async function seed() {
   console.log(`📈 Sector growth data seeded (${sectorRows.length} rows) — illustrative sample data`);
 
   console.log('✅ Seeding complete.');
-  await mongoose.connection.close();
-  process.exit(0);
+  if (!keepConnectionOpen) {
+    await mongoose.connection.close();
+    process.exit(0);
+  }
 }
 
-seed().catch(err => {
-  console.error('❌ Seeding failed:', err);
-  process.exit(1);
-});
+if (require.main === module) {
+  seed().catch(err => {
+    console.error('❌ Seeding failed:', err);
+    process.exit(1);
+  });
+}
+
+module.exports = { seed };

@@ -17,7 +17,22 @@ const publicRoutes = require('./routes/public');
 
 const app = express();
 
-connectDB().then(() => initBlockchain());
+connectDB().then(async () => {
+  await initBlockchain();
+  
+  // Auto-seed database if no admin exists (e.g. initial setup in production Atlas)
+  try {
+    const User = require('./models/User');
+    const adminExists = await User.findOne({ username: 'admin' });
+    if (!adminExists) {
+      console.log('🌱 No admin user found in database. Running auto-seed...');
+      const { seed } = require('./seed/seedData');
+      await seed(true);
+    }
+  } catch (seedErr) {
+    console.error('❌ Database auto-seed check failed:', seedErr);
+  }
+});
 
 app.use(cors({
   origin: process.env.CLIENT_URL || 'http://localhost:5173',
