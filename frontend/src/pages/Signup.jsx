@@ -41,6 +41,9 @@ export default function Signup() {
     setLoading(true);
     try {
       const { data } = await api.post('/auth/signup/verify', { ...form, otp });
+      if (data.token) {
+        localStorage.setItem('token', data.token);
+      }
       setUser(data.user);
       navigate('/dashboard');
     } catch (err) {
