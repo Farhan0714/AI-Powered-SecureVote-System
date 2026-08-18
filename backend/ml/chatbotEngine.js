@@ -11,12 +11,8 @@ const SectorData = require('../models/SectorData');
 
 const { askGemini } = require('../utils/gemini');
 
-const CONFIDENCE_THRESHOLD = 0.35; // below this, treat as "didn't understand" (fallback)
+const CONFIDENCE_THRESHOLD = 0.35;
 
-// ---------------------------------------------------------------------------
-// 1. TRAIN the Naive Bayes classifier once at startup, from backend/ml/intents.js.
-//    Used as a fallback when GEMINI_API_KEY is not configured or fails.
-// ---------------------------------------------------------------------------
 const classifier = new natural.BayesClassifier();
 intents.forEach(({ tag, patterns }) => {
   patterns.forEach(pattern => classifier.addDocument(pattern, tag));
@@ -24,8 +20,6 @@ intents.forEach(({ tag, patterns }) => {
 classifier.train();
 console.log(`🧠 Chatbot intent classifier trained on ${intents.length} intents / ${intents.reduce((s, i) => s + i.patterns.length, 0)} example phrases`);
 
-// Naive Bayes classification scores aren't probabilities out of the box; softmax-normalize
-// them so we get a genuine 0-1 confidence figure to threshold against.
 function classifyWithConfidence(text) {
   const classifications = classifier.getClassifications(text);
   if (!classifications.length) return { tag: 'fallback', confidence: 0 };
@@ -37,11 +31,6 @@ function classifyWithConfidence(text) {
     .sort((a, b) => b.confidence - a.confidence);
   return ranked[0];
 }
-
-// ---------------------------------------------------------------------------
-// 2. RESPOND: per-intent handlers, grounded in live MongoDB data where relevant,
-//    used by the Naive Bayes fallback mode.
-// ---------------------------------------------------------------------------
 
 async function isVotingActive() {
   const phase = await VotingPhase.findOne();
@@ -138,7 +127,6 @@ async function buildResponse(tag, message, user) {
   }
 }
 
-// In-memory conversation context store (volatile - resets on server restart)
 const conversationContext = new Map();
 
 function getContextKey(user, history) {
@@ -165,10 +153,6 @@ function detectFollowUp(message, context) {
   return null;
 }
 
-// ---------------------------------------------------------------------------
-// 3. RAG KNOWLEDGE BASE CONSTRUCTION
-// ---------------------------------------------------------------------------
-
 async function buildRAGContext(user) {
   const docs = [
     { id: 'greeting', title: 'VoteBot Greeting / Introduction', content: STATIC_RESPONSES.greeting },
@@ -180,7 +164,7 @@ async function buildRAGContext(user) {
     { id: 'face_verification_help', title: 'Face verification, camera access, and liveness check instructions', content: STATIC_RESPONSES.face_verification_help },
     { id: 'blockchain_info', title: 'Blockchain security, proof-of-work, and vote tamper-proofing', content: STATIC_RESPONSES.blockchain_info },
     { id: 'password_help', title: 'Resetting or changing account password', content: STATIC_RESPONSES.password_help },
-    // Platform navigation guides
+
     { id: 'guide_dashboard', title: 'SecureVote Dashboard Navigation and Features Guide', content: "The Dashboard is the central home page for logged-in users. Here you can: 1. View your voter registration status (approved, pending, or rejected). 2. View your unique 6-character voting code (if approved). 3. View whether voting is currently active or if you have already voted. 4. Access quick links to 'Apply to Vote' (Register), the 'Vote' page, 'Election Data' (past results), and 'Official Results'." },
     { id: 'guide_application', title: 'Voter Registration / Application Page Navigation Guide', content: "To register as a voter, navigate to the 'Application' page in the navbar: 1. Fill in personal details (Full Name, Father's Name, Mother's Name, Age, Phone, Voter ID, Address, Email). 2. Upload an Identity Proof (Image or PDF). 3. Perform a live face capture with webcam liveness check (turn head left/right). 4. Request and verify the OTP sent to your registration email. 5. Submit the application for admin approval." },
     { id: 'guide_voting', title: 'How to Vote / Voting Page Navigation Guide', content: "To cast your vote, go to the 'Vote' page in the navbar (available to approved voters): 1. Choose your preferred candidate. 2. Enter your unique 6-character voting code shown on your Dashboard or sent to your email. 3. Scan your face live with the webcam face verification. 4. Confirm and submit. Your vote is anonymized, hashed, and recorded on the blockchain." },
@@ -190,7 +174,7 @@ async function buildRAGContext(user) {
   ];
 
   try {
-    // Dynamic Candidates
+
     const candidates = await Candidate.find();
     candidates.forEach(c => {
       docs.push({
@@ -200,7 +184,6 @@ async function buildRAGContext(user) {
       });
     });
 
-    // Dynamic Manifestos
     const manifestos = await Manifesto.find();
     manifestos.forEach(m => {
       docs.push({
@@ -210,7 +193,6 @@ async function buildRAGContext(user) {
       });
     });
 
-    // Dynamic Election History
     const historyList = await ElectionHistory.find();
     historyList.forEach(h => {
       docs.push({
@@ -220,7 +202,6 @@ async function buildRAGContext(user) {
       });
     });
 
-    // Dynamic Sector Growth Data
     const sectorData = await SectorData.find();
     sectorData.forEach(s => {
       docs.push({
@@ -230,7 +211,6 @@ async function buildRAGContext(user) {
       });
     });
 
-    // Dynamic Voting Phase Status
     const phase = await VotingPhase.findOne();
     if (phase) {
       const activeText = phase.isActive ? 'active' : 'inactive';
@@ -242,7 +222,6 @@ async function buildRAGContext(user) {
       });
     }
 
-    // Dynamic User Registration Status
     if (user) {
       const reg = await Registration.findOne({ account: user._id }).sort({ createdAt: -1 });
       if (reg) {
@@ -265,10 +244,6 @@ async function buildRAGContext(user) {
 
   return docs;
 }
-
-// ---------------------------------------------------------------------------
-// 4. MAIN REPLY ROUTER (RAG + GEMINI / FALLBACK)
-// ---------------------------------------------------------------------------
 
 async function getNaiveBayesReply(message, user = null, history = null) {
   const contextKey = getContextKey(user, history);
@@ -310,24 +285,17 @@ async function getNaiveBayesReply(message, user = null, history = null) {
   return { reply, matchedIntent: tag, confidence };
 }
 
-/**
- * Main entry point used by the chatbot routes.
- * @param {string} message - the user's message
- * @param {object|null} user - the authenticated Mongoose user doc, or null for public/anonymous
- * @param {Array|null} history - conversation history from the frontend
- */
 async function getBotReply(message, user = null, history = null) {
-  // If GEMINI_API_KEY is not configured, fall back to Naive Bayes + local DB logic
+
   if (!process.env.GEMINI_API_KEY) {
     console.warn('⚠️ GEMINI_API_KEY is not set in .env. Falling back to Naive Bayes intent classifier.');
     return getNaiveBayesReply(message, user, history);
   }
 
   try {
-    // 1. Build the dynamic context documents
+
     const docs = await buildRAGContext(user);
 
-    // 2. Perform local TF-IDF matching to retrieve the most relevant chunks
     const tfidf = new natural.TfIdf();
     docs.forEach(doc => {
       tfidf.addDocument(`${doc.title} ${doc.content}`);
@@ -338,24 +306,20 @@ async function getBotReply(message, user = null, history = null) {
       scores.push({ index: i, score });
     });
 
-    // Take top 5 most relevant documents
     let relevantDocs = scores
       .sort((a, b) => b.score - a.score)
       .filter(item => item.score > 0)
       .slice(0, 5)
       .map(item => docs[item.index]);
 
-    // Fallback: If no documents match text, grab standard platform guides
     if (relevantDocs.length === 0) {
       relevantDocs = docs.slice(0, 4);
     }
 
-    // 3. Format the context text
     const contextText = relevantDocs
       .map(d => `--- \nDocument: ${d.title}\nContent: ${d.content}`)
       .join('\n\n');
 
-    // 4. Construct System Instruction and User Prompt
     const systemInstruction = `You are VoteBot 🤖, the official AI assistant for the SecureVote blockchain-based voting platform.
 Your task is to answer user queries accurately based on the provided Context and User information.
 
@@ -374,7 +338,7 @@ Guidelines:
     let userPrompt = '';
     if (history && Array.isArray(history) && history.length > 0) {
       userPrompt += "Previous conversation history for context:\n";
-      // Get the last 4 turns
+
       const recentHistory = history.slice(-4);
       recentHistory.forEach(h => {
         const role = h.role === 'user' ? 'User' : 'VoteBot';
@@ -384,7 +348,6 @@ Guidelines:
     }
     userPrompt += `Current User Query: ${message}`;
 
-    // 5. Ask Gemini
     const reply = await askGemini(systemInstruction, userPrompt);
 
     return {

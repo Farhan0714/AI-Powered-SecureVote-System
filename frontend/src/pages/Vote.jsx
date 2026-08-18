@@ -88,15 +88,15 @@ export default function Vote() {
             const delay = `${Math.random() * 3}s`;
             const duration = `${2.5 + Math.random() * 2}s`;
             return (
-              <div 
-                key={i} 
-                className="confetti-piece" 
-                style={{ 
-                  backgroundColor: color, 
-                  left: left, 
+              <div
+                key={i}
+                className="confetti-piece"
+                style={{
+                  backgroundColor: color,
+                  left: left,
                   animationDelay: delay,
-                  animationDuration: duration 
-                }} 
+                  animationDuration: duration
+                }}
               />
             );
           })}

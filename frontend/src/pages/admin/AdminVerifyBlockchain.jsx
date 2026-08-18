@@ -20,7 +20,7 @@ export default function AdminVerifyBlockchain() {
   return (
     <div>
       <Link to="/admin" style={{ fontSize: '0.875rem', color: 'var(--gray-500)', marginBottom: 'var(--space-4)', display: 'inline-block', textDecoration: 'none' }}>← Back to Dashboard</Link>
-      
+
       <div className="card" style={{ maxWidth: '640px', padding: 'var(--space-6) var(--space-8)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', marginBottom: 'var(--space-4)' }}>
           <span style={{ fontSize: '2.25rem' }}>🔗</span>

@@ -60,7 +60,7 @@ const features = [
 export default function Home() {
   return (
     <div className="lp">
-      {/* ============ HERO ============ */}
+      {}
       <section className="lp-hero">
         <div className="lp-hero-badge">
           <span>🔗 Blockchain Secured</span>
@@ -105,7 +105,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ============ HOW IT WORKS ============ */}
+      {}
       <section className="lp-section">
         <p className="lp-eyebrow">How it works</p>
         <h2 className="lp-title">Four steps to a verified vote</h2>
@@ -126,7 +126,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ============ FEATURES (Bento) ============ */}
+      {}
       <section className="lp-section">
         <p className="lp-eyebrow">Platform</p>
         <h2 className="lp-title">Security you can actually see</h2>
@@ -146,7 +146,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ============ CTA ============ */}
+      {}
       <section className="lp-cta">
         <h2>Ready to make your voice count?</h2>
         <p>

@@ -1,8 +1,5 @@
 const mongoose = require('mongoose');
 
-// A proposed block awaiting multi-signature approval before it's finalized into the chain.
-// Splitting proposal from finalization means no single admin/verifier can unilaterally
-// add a block - a quorum (default 2-of-3) of independent verifiers must sign off.
 const pendingBlockSchema = new mongoose.Schema({
   index: { type: Number, required: true },
   prevHash: { type: String, required: true },

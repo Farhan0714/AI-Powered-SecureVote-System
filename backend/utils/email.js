@@ -4,7 +4,7 @@ const qrcode = require('qrcode');
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST || 'smtp.gmail.com',
   port: parseInt(process.env.SMTP_PORT) || 587,
-  secure: process.env.SMTP_SECURE === 'true', // true for 465, false for 587
+  secure: process.env.SMTP_SECURE === 'true',
   auth: {
     user: process.env.SMTP_EMAIL || 'securevote363@gmail.com',
     pass: process.env.SMTP_PASSWORD || 'syxutrswhkxgmhlh'
@@ -80,7 +80,7 @@ async function sendApprovalEmail(toEmail, username, uniqueCode, approvedUserId, 
         <h2 style="color:#1e40af;margin-top:0;">You're Approved to Vote</h2>
         <p style="color:#374151;">Hello <strong>${username}</strong>,</p>
         <p style="color:#374151;">Your voter registration has been reviewed and approved. You will need the unique code below, together with a live face verification, to cast your vote.</p>
-        
+
         <div style="background:#eff6ff;padding:24px;border-radius:10px;text-align:center;margin:24px 0;border:2px dashed #3b82f6;">
           <p style="margin:0 0 8px;color:#1e40af;font-weight:600;">YOUR UNIQUE VOTING CODE</p>
           <div style="font-size:32px;font-weight:bold;letter-spacing:8px;color:#1e40af;font-family:'Courier New',monospace;">${uniqueCode}</div>
@@ -220,10 +220,10 @@ async function sendRejectionEmail(toEmail, username, comment, type) {
   }
 }
 
-module.exports = { 
-  sendOtpEmail, 
-  sendApprovalEmail, 
-  sendCorrectionApprovalEmail, 
-  sendDeletionApprovalEmail, 
-  sendRejectionEmail 
+module.exports = {
+  sendOtpEmail,
+  sendApprovalEmail,
+  sendCorrectionApprovalEmail,
+  sendDeletionApprovalEmail,
+  sendRejectionEmail
 };

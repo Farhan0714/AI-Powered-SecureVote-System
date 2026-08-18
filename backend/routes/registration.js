@@ -10,7 +10,6 @@ const { protect } = require('../middleware/auth');
 
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
 
-// Request OTP before submitting voter registration
 router.post('/request-otp', protect, async (req, res) => {
   try {
     const { email } = req.body;
@@ -34,8 +33,7 @@ router.post('/submit', protect, upload.fields([
     if (!record) return res.status(400).json({ success: false, message: 'Invalid or expired OTP.' });
 
     const ApprovedUser = require('../models/ApprovedUser');
-    
-    // Check if voter ID is already registered or pending
+
     const voterIdTrimmed = voterId ? voterId.trim() : '';
     const existingApprovedVoterId = await ApprovedUser.findOne({ voterId: voterIdTrimmed });
     if (existingApprovedVoterId) {
@@ -107,7 +105,6 @@ router.get('/mine', protect, async (req, res) => {
   }
 });
 
-// Correction request (resubmit/edit voter details with new proof)
 router.post('/correct', protect, upload.fields([
   { name: 'livePhoto', maxCount: 1 },
   { name: 'identityProof', maxCount: 1 }
@@ -130,7 +127,7 @@ router.post('/correct', protect, upload.fields([
     }
 
     const voterIdTrimmed = voterId ? voterId.trim() : '';
-    // Check if voterId is used by someone else
+
     const existingApprovedVoterId = await ApprovedUser.findOne({ voterId: voterIdTrimmed, account: { $ne: req.user._id } });
     if (existingApprovedVoterId) {
       return res.status(400).json({ success: false, message: 'This Voter ID is already registered to another approved voter.' });
@@ -180,7 +177,6 @@ router.post('/correct', protect, upload.fields([
   }
 });
 
-// Deletion request (requesting removal from the database)
 router.post('/delete', protect, async (req, res) => {
   try {
     const { reasonForDeletion, reasonDetails } = req.body;

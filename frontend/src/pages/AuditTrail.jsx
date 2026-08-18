@@ -42,7 +42,7 @@ export default function AuditTrail() {
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: user?.role === 'user' ? '1fr' : '1fr 1fr', gap: 'var(--space-6)', alignItems: 'start' }}>
-        {/* Verification Card */}
+        {}
         <div className="card">
           <h3>🔍 Cryptographic Ledger Audit</h3>
           <p className="section-note" style={{ background: '#f8fafc', padding: 'var(--space-4)', borderLeft: '4px solid var(--primary-500)', borderRadius: '0 var(--radius-md) var(--radius-md) 0' }}>
@@ -88,7 +88,7 @@ export default function AuditTrail() {
           </button>
         </div>
 
-        {/* Finalized Blocks List */}
+        {}
         <div className="card">
           <h3>🧱 Finalized Block Metadata</h3>
           <p style={{ color: 'var(--gray-500)', fontSize: '0.875rem', marginBottom: 'var(--space-4)' }}>
@@ -120,7 +120,7 @@ export default function AuditTrail() {
         </div>
       </div>
 
-      {/* Admin Action Log Card (Only visible to admin and verifiers, NOT standard users) */}
+      {}
       {user?.role !== 'user' && (
         <div className="card" style={{ marginTop: 'var(--space-6)' }}>
           <h3>📋 Administrative Action Logs</h3>

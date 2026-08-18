@@ -2,7 +2,6 @@ const crypto = require('crypto');
 const Block = require('../models/Block');
 const PendingBlock = require('../models/PendingBlock');
 
-// In-memory chain of FINALIZED (multi-signed) blocks, mirrored to MongoDB so it survives restarts.
 let chain = [];
 let pendingVotes = [];
 
@@ -50,12 +49,6 @@ function addPendingVote(voteData) {
   pendingVotes.push({ ...voteData, addedAt: new Date().toISOString() });
 }
 
-// ---------------------------------------------------------------------------
-// Multi-signature block finalization.
-// A block is only PROPOSED here (PoW computed, but not yet part of the trusted chain).
-// It must collect `requiredSignatures` independent verifier/admin signatures
-// (see routes/verifiers.js) before finalizeBlock() moves it into the real chain.
-// ---------------------------------------------------------------------------
 async function proposeBlock(requiredSignatures = 2) {
   if (pendingVotes.length === 0) return null;
   const lastBlock = chain[chain.length - 1];
@@ -68,7 +61,7 @@ async function proposeBlock(requiredSignatures = 2) {
     index, prevHash: lastBlock.hash, txType: 'vote_batch', txData, nonce, hash, timestamp,
     requiredSignatures
   });
-  pendingVotes = []; // votes are now "in flight" inside this proposal
+  pendingVotes = [];
   return pendingBlock;
 }
 
@@ -145,7 +138,6 @@ function getStats() {
   };
 }
 
-// Public-safe metadata only - no transaction contents.
 function getPublicChainMeta() {
   return chain.map(b => ({ index: b.index, hash: b.hash, prevHash: b.prevHash, timestamp: b.timestamp, txType: b.txType }));
 }

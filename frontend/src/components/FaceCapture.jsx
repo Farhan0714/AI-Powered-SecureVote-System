@@ -1,10 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import * as faceapi from '@vladmandic/face-api';
 
-// Free, publicly-hosted face-api.js model weights (loaded once per session, cached by the browser).
 const MODEL_URL = 'https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@0.22.2/weights';
 
-const LIVENESS_SAMPLE_MS = 150; // interval between liveness check frames
+const LIVENESS_SAMPLE_MS = 150;
 
 function getDistance(p1, p2) {
   return Math.sqrt(Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2));
@@ -42,15 +41,6 @@ function loadModels() {
   return modelsLoadedPromise;
 }
 
-/**
- * Webcam-based face capture WITH a basic active-liveness check: the user must visibly
- * turn their head left/right before the Capture button unlocks, which helps reject a
- * static printed photo held up to the camera (a known weakness of descriptor-only face
- * matching - see project README for the honest limitations of this approach).
- *
- * Calls onCapture({ descriptor, image, livenessVerified }) once captured, or
- * onCapture(null) if the user retakes.
- */
 export default function FaceCapture({ onCapture, label = 'Face Verification' }) {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
@@ -60,15 +50,14 @@ export default function FaceCapture({ onCapture, label = 'Face Verification' }) 
   const baselineEarRef = useRef(0.28);
   const earHistoryRef = useRef([]);
 
-  const [status, setStatus] = useState('off'); // off | loading | ready | scanning | captured | error
+  const [status, setStatus] = useState('off');
   const [error, setError] = useState('');
   const [captured, setCaptured] = useState(null);
   const [livenessVerified, setLivenessVerified] = useState(false);
-  const [livenessProgress, setLivenessProgress] = useState(0); // 0-1, for a simple progress hint
+  const [livenessProgress, setLivenessProgress] = useState(0);
   const [isCameraActive, setIsCameraActive] = useState(false);
   const [isFaceDetected, setIsFaceDetected] = useState(false);
 
-  // Real-time guidance states
   const turnLeftRef = useRef(false);
   const turnRightRef = useRef(false);
   const [currentRatio, setCurrentRatio] = useState(1.0);
@@ -99,9 +88,9 @@ export default function FaceCapture({ onCapture, label = 'Face Verification' }) 
         setStatus('loading');
         setError('');
         await loadModels();
-        // Use ideal constraints for wider compatibility with webcams
-        const stream = await navigator.mediaDevices.getUserMedia({ 
-          video: { width: { ideal: 320 }, height: { ideal: 240 } } 
+
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { width: { ideal: 320 }, height: { ideal: 240 } }
         });
         if (cancelled) { stream.getTracks().forEach(t => t.stop()); return; }
         streamRef.current = stream;
@@ -125,7 +114,7 @@ export default function FaceCapture({ onCapture, label = 'Face Verification' }) 
       streamRef.current?.getTracks().forEach(t => t.stop());
       if (livenessIntervalRef.current) clearInterval(livenessIntervalRef.current);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
   }, [isCameraActive]);
 
   function startLivenessTracking() {
@@ -168,7 +157,6 @@ export default function FaceCapture({ onCapture, label = 'Face Verification' }) 
             const ratioL = distL / distR;
             const ratioR = distR / distL;
 
-            // Track left and right turns (lenient ratio threshold 1.45)
             if (!turnLeftRef.current && ratioL > 1.45) {
               turnLeftRef.current = true;
               setLivenessProgress(prev => prev + 0.5);
@@ -180,7 +168,6 @@ export default function FaceCapture({ onCapture, label = 'Face Verification' }) 
               console.log('Head turn RIGHT detected!');
             }
 
-            // Display current active ratio
             setCurrentRatio(ratioL > ratioR ? ratioL : ratioR);
 
             if (turnLeftRef.current && turnRightRef.current) {
@@ -301,14 +288,14 @@ export default function FaceCapture({ onCapture, label = 'Face Verification' }) 
                     {guidanceText}
                   </p>
                   <div className="liveness-bar" style={{ height: '8px', background: 'var(--gray-200)', borderRadius: 'var(--radius-full)', overflow: 'hidden', margin: 'var(--space-2) 0' }}>
-                    <div 
-                      className="liveness-bar-fill" 
-                      style={{ 
+                    <div
+                      className="liveness-bar-fill"
+                      style={{
                         height: '100%',
                         transition: 'all 0.1s ease',
                         width: `${livenessProgress * 100}%`,
                         backgroundColor: livenessProgress >= 1.0 ? 'var(--success)' : 'var(--primary-500)'
-                      }} 
+                      }}
                     />
                   </div>
                   {isFaceDetected && (
@@ -342,9 +329,9 @@ export default function FaceCapture({ onCapture, label = 'Face Verification' }) 
               🔌 Turn Camera Off
             </button>
             {!livenessVerified && status === 'ready' && (
-              <button 
-                type="button" 
-                className="btn btn-secondary btn-sm" 
+              <button
+                type="button"
+                className="btn btn-secondary btn-sm"
                 style={{ background: 'var(--warning-50)', color: 'var(--warning-700)', border: '1px solid var(--warning-200)' }}
                 onClick={() => {
                   setLivenessVerified(true);

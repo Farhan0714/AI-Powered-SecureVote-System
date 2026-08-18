@@ -41,7 +41,7 @@ export default function App() {
             <Route path="/signup" element={<Signup />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
 
-            {/* ---- User side ---- */}
+            {}
             <Route path="/dashboard" element={<ProtectedRoute roles={['user']}><Dashboard /></ProtectedRoute>} />
             <Route path="/register" element={<ProtectedRoute roles={['user']}><Register /></ProtectedRoute>} />
             <Route path="/correct" element={<ProtectedRoute roles={['user']}><Correction /></ProtectedRoute>} />
@@ -52,7 +52,7 @@ export default function App() {
             <Route path="/growth-analysis" element={<ProtectedRoute roles={['user']}><GrowthAnalysis /></ProtectedRoute>} />
             <Route path="/results" element={<ProtectedRoute roles={['user']}><Results /></ProtectedRoute>} />
 
-            {/* ---- Admin side ---- */}
+            {}
             <Route path="/admin" element={<ProtectedRoute roles={['admin']}><AdminDashboard /></ProtectedRoute>} />
             <Route path="/admin/registrations/:id" element={<ProtectedRoute roles={['admin']}><AdminView /></ProtectedRoute>} />
             <Route path="/admin/verify-voter/:id" element={<ProtectedRoute roles={['admin']}><AdminVerifyVoter /></ProtectedRoute>} />
@@ -60,13 +60,13 @@ export default function App() {
             <Route path="/admin/voting-phase" element={<ProtectedRoute roles={['admin']}><AdminVotingPhase /></ProtectedRoute>} />
             <Route path="/admin/blockchain" element={<ProtectedRoute roles={['admin']}><AdminVerifyBlockchain /></ProtectedRoute>} />
 
-            {/* ---- Verifier side ---- */}
+            {}
             <Route path="/verifier" element={<ProtectedRoute roles={['verifier']}><VerifierHome /></ProtectedRoute>} />
 
-            {/* ---- Shared across admin + verifier ---- */}
+            {}
             <Route path="/block-signing" element={<ProtectedRoute roles={['admin', 'verifier']}><BlockSigning /></ProtectedRoute>} />
 
-            {/* ---- Shared across all authenticated roles ---- */}
+            {}
             <Route path="/audit-trail" element={<ProtectedRoute roles={['user', 'admin', 'verifier']}><AuditTrail /></ProtectedRoute>} />
 
             <Route path="*" element={<div className="card"><h2>404 - Page Not Found</h2></div>} />

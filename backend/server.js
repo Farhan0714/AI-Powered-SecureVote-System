@@ -19,8 +19,7 @@ const app = express();
 
 connectDB().then(async () => {
   await initBlockchain();
-  
-  // Auto-seed database if no admin exists (e.g. initial setup in production Atlas)
+
   try {
     const User = require('./models/User');
     const adminExists = await User.findOne({ username: 'admin' });
@@ -54,13 +53,12 @@ app.use('/api/election', electionRoutes);
 app.use('/api/verifiers', verifierRoutes);
 app.use('/api/public', publicRoutes);
 
-// ---- Serve the built React frontend (production / Cloud Run) ----
 const path = require('path');
 const fs = require('fs');
 const distPath = path.join(__dirname, '..', 'frontend', 'dist');
 if (fs.existsSync(distPath)) {
   app.use(express.static(distPath));
-  // SPA fallback: any non-API GET returns index.html (client-side routing)
+
   app.get(/^(?!\/api\/).*/, (req, res) => {
     res.sendFile(path.join(distPath, 'index.html'));
   });

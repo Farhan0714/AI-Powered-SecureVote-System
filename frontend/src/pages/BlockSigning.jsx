@@ -4,9 +4,6 @@ import { useAuth } from '../context/AuthContext.jsx';
 import Alert from '../components/Alert.jsx';
 import { signMessage, downloadTextFile } from '../utils/crypto.js';
 
-// Available to both 'admin' and 'verifier' roles. Implements the 2-of-3 multi-signature
-// block finalization flow: propose a block from queued (anonymized) votes, then each
-// signer independently signs it with their own private key (kept only in their browser).
 export default function BlockSigning() {
   const { user } = useAuth();
   const [status, setStatus] = useState(null);

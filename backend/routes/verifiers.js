@@ -9,11 +9,6 @@ const blockchain = require('../utils/blockchain');
 
 router.use(protect, verifierOrAdmin);
 
-// Generates a fresh RSA-2048 keypair for the CURRENT account. The private key is
-// returned exactly once in this response and is never stored server-side - the
-// account holder is responsible for keeping it (this mirrors handing an election
-// officer a physical signing credential). Only the public key is persisted, and is
-// what the server uses to verify future block signatures from this account.
 router.post('/generate-key', async (req, res) => {
   try {
     const { publicKey, privateKey } = crypto.generateKeyPairSync('rsa', {
@@ -46,8 +41,6 @@ router.get('/status', (req, res) => {
   res.json({ success: true, pendingVotesQueued: stats.pendingVotes, totalFinalizedBlocks: stats.totalBlocks, chainValid: stats.isValid });
 });
 
-// List of accounts eligible to sign blocks (admin + verifier roles), and whether each
-// has a signing key set up yet - useful for the admin to see readiness before proposing.
 router.get('/roster', adminOnly, async (req, res) => {
   const roster = await User.find({ role: { $in: ['admin', 'verifier'] } })
     .select('username role publicKeyPem');
@@ -57,7 +50,6 @@ router.get('/roster', adminOnly, async (req, res) => {
   });
 });
 
-// ---- Block proposal & signing ----
 router.post('/blocks/propose', async (req, res) => {
   try {
     const requiredSignatures = Number(req.body?.requiredSignatures) || 2;
@@ -70,8 +62,6 @@ router.post('/blocks/propose', async (req, res) => {
   }
 });
 
-// Metadata only - never the underlying vote/candidate data - so verifiers can review
-// what they're signing without seeing anything sensitive.
 router.get('/blocks/pending', async (req, res) => {
   try {
     const pending = await blockchain.getPendingBlocks();

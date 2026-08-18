@@ -35,15 +35,15 @@ export default function Dashboard() {
       </div>
 
       <div className="dashboard-grid-advanced" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 'var(--space-6)', alignItems: 'start' }}>
-        
-        {/* Left Column: Voter Registration & Actions */}
+
+        {}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-6)' }}>
-          
-          {/* Card 1: Voter Registration */}
+
+          {}
           <div className="card">
             <div style={{ fontSize: '1.75rem', marginBottom: 'var(--space-3)' }}>📝</div>
             <h3>Voter Registration</h3>
-            
+
             {error && <div className="alert alert-error" style={{ margin: 'var(--space-2) 0' }}>{error}</div>}
             {success && <div className="alert alert-success" style={{ margin: 'var(--space-2) 0' }}>{success}</div>}
 
@@ -71,7 +71,7 @@ export default function Dashboard() {
                 <p style={{ marginBottom: 'var(--space-3)' }}>
                   Status: <span className="status-badge status-approved">Approved Voter</span>
                 </p>
-                
+
                 <div style={{ fontSize: '0.875rem', color: 'var(--gray-600)', marginBottom: 'var(--space-4)' }}>
                   <div style={{ marginBottom: 'var(--space-1)' }}><strong>Name:</strong> {approvedUser.name}</div>
                   <div style={{ marginBottom: 'var(--space-1)' }}><strong>Voter ID:</strong> {approvedUser.voterId}</div>
@@ -123,7 +123,7 @@ export default function Dashboard() {
             )}
           </div>
 
-          {/* Card 2: Voting Status */}
+          {}
           <div className="card">
             <div style={{ fontSize: '1.75rem', marginBottom: 'var(--space-3)' }}>🗳️</div>
             <h3>Voting Status</h3>
@@ -159,7 +159,7 @@ export default function Dashboard() {
             )}
           </div>
 
-          {/* Card 3: Resources */}
+          {}
           <div className="card">
             <div style={{ fontSize: '1.75rem', marginBottom: 'var(--space-3)' }}>📊</div>
             <h3>Election Resources</h3>
@@ -174,12 +174,12 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Right Column: Dribbble Mockup Stats & Live Ledger Blocks */}
+        {}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-6)' }}>
-          
-          {/* Row of Metrics */}
+
+          {}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 'var(--space-4)' }}>
-            
+
             <div className="card" style={{ padding: 'var(--space-4)', textAlign: 'center', background: 'var(--navbar-bg)', color: '#fff', border: 'none' }}>
               <span style={{ fontSize: '1.5rem', display: 'block', marginBottom: '8px' }}>🛡️</span>
               <span style={{ fontSize: '0.75rem', textTransform: 'uppercase', opacity: 0.8, display: 'block', fontWeight: 600 }}>Security</span>
@@ -205,7 +205,7 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Live Blockchain Stream */}
+          {}
           <div className="card">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-4)' }}>
               <h3 style={{ margin: 0 }}>⛓️ Live Ledger Blocks</h3>

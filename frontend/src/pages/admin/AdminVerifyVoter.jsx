@@ -16,8 +16,7 @@ function getEuclideanDistance(desc1, desc2) {
 export default function AdminVerifyVoter() {
   const { id } = useParams();
   const navigate = useNavigate();
-  
-  // Search parameters for unique code passed via QR
+
   const queryParams = new URLSearchParams(window.location.search);
   const codeParam = queryParams.get('code') || '';
 
@@ -26,8 +25,7 @@ export default function AdminVerifyVoter() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
-  
-  // Verification states
+
   const [faceCapture, setFaceCapture] = useState(null);
   const [isFaceVerified, setIsFaceVerified] = useState(false);
   const [selectedCandidate, setSelectedCandidate] = useState(null);
@@ -37,12 +35,11 @@ export default function AdminVerifyVoter() {
   const [matchDistance, setMatchDistance] = useState(null);
 
   useEffect(() => {
-    // Fetch voter details
+
     api.get(`/admin/approved-voters/${id}`)
       .then(({ data }) => setVoter(data.voter))
       .catch(err => setError(err.response?.data?.message || 'Failed to load voter details.'));
 
-    // Fetch candidates list
     api.get('/vote/candidates')
       .then(({ data }) => setCandidates(data.candidates))
       .catch(err => setError('Failed to load candidates.'));
@@ -87,7 +84,7 @@ export default function AdminVerifyVoter() {
         livenessVerified: faceCapture.livenessVerified
       });
       setSuccess(data.message);
-      // Refresh voter status
+
       setVoter(prev => prev ? { ...prev, hasVoted: true } : null);
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to cast vote.');
@@ -116,14 +113,14 @@ export default function AdminVerifyVoter() {
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-6)' }}>
-        {/* Left Side: Voter profile details */}
+        {}
         <div className="card">
           <div style={{ display: 'flex', gap: 'var(--space-4)', alignItems: 'center', marginBottom: 'var(--space-4)' }}>
             {voter.livePhoto && (
-              <img 
-                src={voter.livePhoto} 
-                alt={voter.name} 
-                style={{ width: '80px', height: '80px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--primary-500)' }} 
+              <img
+                src={voter.livePhoto}
+                alt={voter.name}
+                style={{ width: '80px', height: '80px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--primary-500)' }}
               />
             )}
             <div>
@@ -151,22 +148,22 @@ export default function AdminVerifyVoter() {
               <div>{success}</div>
             </div>
           )}
-          
+
           {error && <Alert type="error">{error}</Alert>}
 
-          {/* Voting Box (Unlocked on face verification success) */}
+          {}
           {!voter.hasVoted && isFaceVerified && (
             <form onSubmit={handleCastVote} style={{ marginTop: 'var(--space-6)', borderTop: '1.5px dashed var(--gray-200)', paddingTop: 'var(--space-6)' }}>
               <h4 style={{ marginBottom: 'var(--space-4)', color: 'var(--success)' }}>🔓 Booth Access Unlocked</h4>
-              
+
               <div className="form-group">
                 <label className="form-label">Unique Voting Code</label>
-                <input 
-                  className="form-input otp-input" 
-                  required 
+                <input
+                  className="form-input otp-input"
+                  required
                   maxLength={6}
-                  value={uniqueCode} 
-                  onChange={e => setUniqueCode(e.target.value.toUpperCase())} 
+                  value={uniqueCode}
+                  onChange={e => setUniqueCode(e.target.value.toUpperCase())}
                   placeholder="Enter 6-digit code"
                 />
               </div>
@@ -176,12 +173,12 @@ export default function AdminVerifyVoter() {
                 <div className="candidate-list">
                   {candidates.map(c => (
                     <label key={c._id} className={`candidate-card ${selectedCandidate === c._id ? 'selected' : ''}`}>
-                      <input 
-                        type="radio" 
-                        name="candidate" 
-                        value={c._id} 
+                      <input
+                        type="radio"
+                        name="candidate"
+                        value={c._id}
                         checked={selectedCandidate === c._id}
-                        onChange={() => setSelectedCandidate(c._id)} 
+                        onChange={() => setSelectedCandidate(c._id)}
                       />
                       <span className="candidate-symbol">{c.symbol || '🏛️'}</span>
                       <div>
@@ -206,7 +203,7 @@ export default function AdminVerifyVoter() {
           )}
         </div>
 
-        {/* Right Side: Live Webcam Liveness Face Matching */}
+        {}
         <div className="card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
           {!voter.hasVoted ? (
             <div>
@@ -215,7 +212,7 @@ export default function AdminVerifyVoter() {
                 Voter must turn their head left and right in front of the camera to confirm liveness.
               </p>
 
-              {/* Side by side comparison cards */}
+              {}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-3)', margin: 'var(--space-4) 0' }}>
                 <div style={{ textAlign: 'center', background: 'var(--gray-50)', padding: 'var(--space-2)', borderRadius: 'var(--radius-md)', border: '1px solid var(--gray-200)' }}>
                   <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--gray-500)', display: 'block', marginBottom: '4px' }}>REGISTERED PHOTO</span>
@@ -248,7 +245,7 @@ export default function AdminVerifyVoter() {
                   )}
                 </div>
               )}
-              
+
               <FaceCapture label="Polling Booth Face Scan" onCapture={setFaceCapture} />
             </div>
           ) : (

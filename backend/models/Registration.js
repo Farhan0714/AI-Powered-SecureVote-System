@@ -12,8 +12,7 @@ const registrationSchema = new mongoose.Schema({
   regEmail: { type: String, required: true, index: true },
   livePhoto: { data: Buffer, contentType: String },
   identityProof: { data: Buffer, contentType: String },
-  // 128-length face descriptor extracted client-side (face-api.js) from the live photo,
-  // used later to verify identity via face match during vote casting.
+
   faceDescriptor: { type: [Number], default: undefined },
   livenessVerified: { type: Boolean, default: false },
   status: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' },

@@ -9,7 +9,6 @@ const { sendOtpEmail } = require('../utils/email');
 const { signToken, sendTokenCookie } = require('../utils/token');
 const { protect } = require('../middleware/auth');
 
-// STEP 1: request OTP for signup
 router.post('/signup/request-otp', async (req, res) => {
   try {
     const { username, email, password } = req.body;
@@ -29,7 +28,6 @@ router.post('/signup/request-otp', async (req, res) => {
   }
 });
 
-// STEP 2: verify OTP + create account
 router.post('/signup/verify', async (req, res) => {
   try {
     const { username, email, password, otp } = req.body;
@@ -81,7 +79,6 @@ router.get('/me', protect, (req, res) => {
   res.json({ success: true, user: req.user });
 });
 
-// Forgot password flow
 router.post('/forgot-password/send-otp', async (req, res) => {
   try {
     const { email } = req.body;
